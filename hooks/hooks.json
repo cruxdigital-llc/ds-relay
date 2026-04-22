@@ -1,0 +1,27 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": ".claude/hooks/enforce-preflight.sh",
+          "description": "Before dispatching any agent, verify the agent's required artifacts exist in the working run directory. If Code Writer is called without component-rules.md and architecture.md present, block the call. Artifacts and consumers are defined in standards/artifact-contracts.md."
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": ".claude/hooks/gigo-scan.sh",
+          "description": "After any agent writes output, scan for rule violations: var(--x, fallback) patterns, hardcoded hex colors outside tokens, [UNRESOLVED] markers without GIGO penalty recorded, title-case user-facing strings. Reports to pipeline-state.yaml; does not block — the next Quality Gate consumes the report."
+        }
+      ]
+    }
+  ],
+  "_note": "Hook scripts are stubs at v0.1.0. Implementations are tracked in ROADMAP Phase 1. The contract of what they enforce is the deliverable for scaffolding; shell implementations come as each rule is proved in practice."
+}

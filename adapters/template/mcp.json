@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "your-ds-tokens": {
+      "command": "npx",
+      "args": ["-y", "<your-ds-tokens-mcp-package>"],
+      "env": {},
+      "description": "Authoritative token list for <Your DS Name>. Referenced by Design Analyst (brief extraction) and Library Researcher (audit)."
+    },
+    "your-ds-components": {
+      "command": "npx",
+      "args": ["-y", "<your-ds-components-mcp-package>"],
+      "env": {},
+      "description": "Component registry for <Your DS Name>. Referenced by Library Researcher (composition audit) and Component Architect (what to compose vs. build)."
+    },
+    "your-ds-icons": {
+      "command": "npx",
+      "args": ["-y", "<your-ds-icons-mcp-package>"],
+      "env": {},
+      "description": "Icon registry for <Your DS Name>. Referenced by Design Analyst (asset extraction)."
+    }
+  },
+  "_note": "Replace package names, tool names, and descriptions with your DS's actual MCP endpoints. This file is merged into the plugin's .mcp.json at runtime when this adapter is active."
+}

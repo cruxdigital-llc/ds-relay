@@ -1,0 +1,11 @@
+{
+  "name": "relay-ds",
+  "version": "0.1.0",
+  "description": "Automated Design System (ADS). Agent-team pipeline that turns a Figma component into a production React component via 8 specialized agents across Understand → Build → Verify phases. Generic core, pluggable design-system adapter.",
+  "author": {
+    "name": "Crux Digital",
+    "email": "zach.hendershot@cruxdigital.com"
+  },
+  "keywords": ["design-system", "figma", "agents", "react", "storybook"],
+  "homepage": "https://github.com/cruxdigital-llc/ds-relay"
+}

@@ -1,0 +1,30 @@
+# Claude Code per-project state (not the plugin manifest)
+.claude/
+
+# Pipeline run artifacts
+runs/
+out/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
