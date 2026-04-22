@@ -28,6 +28,12 @@ Skill rules are *precise*; memory rules are *broad*. A rule in the wrong layer e
 
 ---
 
+## ID scheme
+
+Entries use **three-digit zero-padded numeric IDs** (`001`, `002`, `003`, …). Stable, sortable, unambiguous. IDs are never reused — a promoted entry keeps its ID with `status: promoted-to-memory` or `hardened-to-skill` for traceability.
+
+`/relay-ds:promote-rule <rule-id>` accepts the three-digit form. Referencing by heading text is also supported as a fallback, but the numeric ID is the canonical handle.
+
 ## Entries
 
 <!--

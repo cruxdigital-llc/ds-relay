@@ -6,6 +6,33 @@ Design-system-agnostic core. Pluggable adapters per target DS.
 
 ---
 
+## Install
+
+```
+/plugin marketplace add cruxdigital-llc/crux-marketplace
+/plugin install relay-ds@crux-marketplace
+```
+
+### Prerequisites
+
+- **Claude Code** — the plugin targets current Claude Code plugin conventions (subagents, slash commands, hooks, MCP config)
+- **Figma desktop app** with the **Figma Console MCP plugin** installed — the Design Analyst's primary Figma path. Without it, the pipeline falls back to Figma REST and applies a `-0.30` GIGO penalty
+- **A target repo** where generated components will land — React 18+, TypeScript, Storybook, CSS Modules. Convention: `standards/test-target-repo.md`
+- **A filled-in DS adapter** — run `/relay-ds:onboard-adapter <your-ds-name>` once per design system (see step 1 in *How to use* below)
+
+### Verifying the install
+
+After installing, confirm the commands are registered:
+
+```
+/relay-ds:onboard-adapter --help
+/relay-ds:build-component --help
+```
+
+Both should print the argument hint from the command's frontmatter.
+
+---
+
 ## What you get
 
 - **Eight specialized agents** across three phases (Understand → Build → Verify), each with its own system prompt, tool allowlist, and iteration budget
@@ -49,10 +76,14 @@ standards/                     # the contracts
   artifact-contracts.md            # every doc, every required section
   tech-stack.md                    # output-code conventions
   ds-adapter.md                    # adapter interface
+  test-target-repo.md              # target-repo shape + ADS_TARGET_REPO resolution
   push-back-protocol.md            # [BLOCKING]/[CONCERN]/[SUGGESTION]
   gigo-score.md                    # deterministic quality score
+  figma-canary.md                  # MCP liveness check protocol
   three-tier-failures.md           # T1/T2/T3 classification
   conversational-gate.md           # architecture gate behavior
+  run-retention.md                 # prune policy + env knobs
+  pr-description-template.md       # exact populated PR body
   onboarding-discovery.md          # adapter auto-detection contract
 
 adapters/template/             # copy this, fill in for your DS

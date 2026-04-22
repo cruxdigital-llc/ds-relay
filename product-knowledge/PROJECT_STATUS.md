@@ -43,11 +43,9 @@ Full detail: [TECH_STACK.md](./TECH_STACK.md).
 - See [ROADMAP.md](./ROADMAP.md) § Future Horizons — framework adapters (Vue/Svelte/Web Components), Figma-data independence, multi-component workflows, git+PR integration, team mode
 
 ## Known Issues / Technical Debt
-- Not a git repository yet (`git init` pending)
-- Hook scripts are stubs — shell implementations come as each rule is proved in practice
-- MCP package names in `.mcp.json` are placeholders; verify against actual published packages before first run
-- No test-target repo convention defined yet (the pipeline can't validate itself inside itself — needs an external project)
-- `adapters/template/` is a copy-and-fill template only; no filled-in adapter exists yet
+- `adapters/template/` is a copy-and-fill template only; no filled-in adapter exists yet (user-gated — runs `/relay-ds:onboard-adapter` against a specific DS)
+- Hook implementations cover the common rule violations but adapter-specific forbidden-prefix scanning is deferred to Quality Gate (parses adapter's `tokens.md` at runtime)
+- `jq` is required on the dev machine for hooks to operate; the hooks gracefully skip if missing
 
 ## Recent Changes
 - 2026-04-22: `/glados:plan-product` run. MISSION, ROADMAP, TECH_STACK defined.
@@ -58,3 +56,5 @@ Full detail: [TECH_STACK.md](./TECH_STACK.md).
 - 2026-04-22: Top-level `README.md` added.
 - 2026-04-22: Plugin renamed to `relay-ds`; slash commands namespaced under `/relay-ds:*`.
 - 2026-04-22: Adapter onboarding — `/relay-ds:onboard-adapter` command + `adapter-onboarder` subagent + `standards/onboarding-discovery.md`. Auto-detects tokens, component names, and MCP config; emits pointed-question stubs for voice and manual checks with an `onboarding-report.md` diagnostic.
+- 2026-04-22: `git init`; initial commit pushed to `github.com:cruxdigital-llc/ds-relay`. Plugin listed in `cruxdigital-llc/crux-marketplace` (PR #1).
+- 2026-04-22: Gap-closing pass for end-to-end runnability. README install section; `standards/test-target-repo.md`, `figma-canary.md`, `run-retention.md`, `pr-description-template.md`; workaround ID scheme; build-component orchestrator concretized (GIGO formula, halt UI, decision matrix); real hook implementations (preflight + GIGO scan); corrected Figma Console MCP package name to `figma-console-mcp`.

@@ -19,9 +19,16 @@ Plugin skeleton and design-system adapter contract. No agents operating yet.
 - [x] Template adapter at `adapters/template/` — generic starter teams copy and fill in
 - [x] Adapter onboarding command (`/relay-ds:onboard-adapter`) + `adapter-onboarder` subagent — auto-detect tokens from CSS/JSON/npm, component names from Storybook/npm, MCP config from provided command; structured stubs with `[NEEDS_INPUT]` markers for editorial voice and manual checks
 - [x] Discovery protocol documented (`standards/onboarding-discovery.md`)
-- [x] MCP wiring: Figma Console MCP, Context7, target-DS tool surface
-- [x] Repo standards committed to `standards/` (tech stack, naming, file layout, artifact contracts)
-- [ ] Test-target repo convention (the pipeline can't validate itself inside itself — it needs an external project to build into)
+- [x] MCP wiring: Figma Console MCP (`figma-console-mcp`), Context7 (`@upstash/context7-mcp`), target-DS tool surface
+- [x] Repo standards committed to `standards/` (tech stack, naming, file layout, artifact contracts, push-back protocol, GIGO score, three-tier failures, conversational gate, onboarding discovery, test-target repo, Figma canary protocol, run retention, PR description template)
+- [x] Test-target repo convention documented (`standards/test-target-repo.md`)
+- [x] Hook implementations (`hooks/enforce-preflight.sh` checks artifact dependencies; `hooks/gigo-scan.sh` scans for forbidden patterns in output source)
+- [x] Figma Console MCP canary protocol (`standards/figma-canary.md`)
+- [x] Run retention policy (`standards/run-retention.md`) — 20 runs per component, env-var configurable
+- [x] PR description template (`standards/pr-description-template.md`)
+- [x] Workarounds ID scheme (three-digit zero-padded; documented in `workarounds.md`)
+- [x] Orchestrator concretized (`commands/build-component.md`) — GIGO aggregation formula, iteration-counter bookkeeping, halt UI, failure decision matrix
+- [x] Marketplace distribution — plugin listed in `cruxdigital-llc/crux-marketplace`
 
 ## Phase 1 — Linear pipeline
 

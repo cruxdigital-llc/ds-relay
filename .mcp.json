@@ -2,20 +2,20 @@
   "mcpServers": {
     "figma-console": {
       "command": "npx",
-      "args": ["-y", "@figma-console/mcp"],
+      "args": ["-y", "figma-console-mcp"],
       "env": {},
-      "description": "Figma Console MCP — WebSocket bridge to the Figma desktop app. Requires Figma desktop running with the Console plugin installed. Primary Figma path — can expand component instance children, resolve variable bindings, reach internal layout properties. Fallback = Figma REST API (-0.30 GIGO penalty)."
+      "description": "Figma Console MCP — WebSocket bridge to the Figma desktop app. Requires the Figma Desktop Bridge plugin installed in Figma desktop. Primary Figma path — can expand component instance children, resolve variable bindings, reach internal layout properties. Fallback = Figma REST API (-0.30 GIGO penalty). See standards/figma-canary.md for the liveness check protocol."
     },
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
       "env": {},
-      "description": "Context7 MCP — up-to-date library documentation. Used by Library Researcher to audit dependency API surfaces."
+      "description": "Context7 MCP — up-to-date library documentation. Used by Library Researcher to audit dependency API surfaces. An --api-key (from context7.com/dashboard) can be appended to args for higher rate limits; not strictly required for basic usage."
     }
   },
   "_comments": {
     "ds-adapter-note": "Design-system-specific MCP servers (DS tokens, DS components, etc.) are wired in by the active DS adapter's mcp.json, not here. See standards/ds-adapter.md. The adapter's MCP block is merged into this file at runtime.",
     "figma-rest-note": "There is no REST-API MCP server configured by default. The Design Analyst skill invokes REST directly via fetch when the Figma Console MCP canary fails. This keeps the fallback path explicit and GIGO-penalty-tracked rather than silently invisible.",
-    "package-names": "Package names above are placeholders; replace with the actual npm package names when the MCP servers are installed."
+    "adding-api-key": "To add an optional Context7 API key, change args to [\"-y\", \"@upstash/context7-mcp\", \"--api-key\", \"YOUR_KEY\"]. Storing the key in env and using process.env in args is not supported in Claude Code MCP config; inline the key or use a secrets manager that rewrites .mcp.json at install time."
   }
 }
