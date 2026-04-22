@@ -2,12 +2,12 @@
 # Pre-flight artifact check. Blocks agent dispatch when required inputs are missing.
 #
 # Hook contract: reads JSON tool input from stdin; exits 0 to allow, exits 1 to block.
-# Only operates when $ADS_RUN_DIR is set (i.e., inside a pipeline run). Otherwise passes through.
+# Only operates when $RELAY_DS_RUN_DIR is set (i.e., inside a pipeline run). Otherwise passes through.
 
 set -euo pipefail
 
 input="$(cat)"
-run_dir="${ADS_RUN_DIR:-}"
+run_dir="${RELAY_DS_RUN_DIR:-}"
 
 # Outside a pipeline run — nothing to enforce.
 if [ -z "$run_dir" ]; then

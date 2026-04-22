@@ -166,7 +166,7 @@ Adapter for <DS Display Name>, scaffolded by /relay-ds:onboard-adapter on <today
 - **Voice guide:** <voice_url or "not provided">
 
 ## Adapter version
-Targets ADS pipeline version: >=0.1.0 <1.0.0
+Targets Relay DS pipeline version: >=0.1.0 <1.0.0
 
 ## Status
 See onboarding-report.md for confidence per section and remaining [NEEDS_INPUT] items.

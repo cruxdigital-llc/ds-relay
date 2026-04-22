@@ -76,7 +76,7 @@ standards/                     # the contracts
   artifact-contracts.md            # every doc, every required section
   tech-stack.md                    # output-code conventions
   ds-adapter.md                    # adapter interface
-  test-target-repo.md              # target-repo shape + ADS_TARGET_REPO resolution
+  test-target-repo.md              # target-repo shape + RELAY_DS_TARGET_REPO resolution
   push-back-protocol.md            # [BLOCKING]/[CONCERN]/[SUGGESTION]
   gigo-score.md                    # deterministic quality score
   figma-canary.md                  # MCP liveness check protocol

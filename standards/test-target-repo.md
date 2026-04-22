@@ -12,7 +12,7 @@ Three reasons:
 
 1. **Component code needs a real host.** A generated `<ComponentName>.tsx` imports from `react`, `@floating-ui/react`, design-system tokens, etc. Those need to resolve. The target is where `package.json` lives.
 2. **Storybook needs to render.** The Visual Reviewer screenshots stories. That requires a running Storybook — which needs to be wired into an actual project.
-3. **The pipeline is the editor, not the editor's substrate.** Mixing ADS pipeline code with the code it produces means changes to one accidentally affect the other. Separation is hygiene.
+3. **The pipeline is the editor, not the editor's substrate.** Mixing Relay DS pipeline code with the code it produces means changes to one accidentally affect the other. Separation is hygiene.
 
 ---
 
@@ -60,12 +60,12 @@ The exact versions are flexible; the *shape* is not.
 
 ## How the pipeline connects to the target
 
-Via `ADS_TARGET_REPO` env var, or the `--out` flag to `/relay-ds:build-component`.
+Via `RELAY_DS_TARGET_REPO` env var, or the `--out` flag to `/relay-ds:build-component`.
 
 Resolution order:
 
 1. Explicit `--out <path>` flag on the command
-2. `ADS_TARGET_REPO` env var — path to the target repo; components land at `<ADS_TARGET_REPO>/src/components/<ComponentName>/`
+2. `RELAY_DS_TARGET_REPO` env var — path to the target repo; components land at `<RELAY_DS_TARGET_REPO>/src/components/<ComponentName>/`
 3. Fallback: `./out/<ComponentName>/` inside the current working directory. Not useful for real builds — the Visual Reviewer will fail to screenshot because nothing is installed.
 
 The orchestrator validates target presence before dispatching Code Writer:
@@ -90,7 +90,7 @@ npm install @floating-ui/react axe-core
 npm install -D eslint-plugin-jsx-a11y prettier
 ```
 
-Then install the DS's token package / paste the token CSS into `src/index.css`, and set `ADS_TARGET_REPO=$(pwd)` before running `/relay-ds:build-component`.
+Then install the DS's token package / paste the token CSS into `src/index.css`, and set `RELAY_DS_TARGET_REPO=$(pwd)` before running `/relay-ds:build-component`.
 
 This starter isn't maintained as part of the plugin — it's just a known-good starting point. A future iteration of the plugin could add a `/relay-ds:init-target` command to automate it; not in v0.1.0 scope.
 
@@ -99,5 +99,5 @@ This starter isn't maintained as part of the plugin — it's just a known-good s
 ## What the target repo must NOT do
 
 - **Must not have an existing `src/components/<ComponentName>/` directory** for the component being built. The pipeline refuses to overwrite existing components (safety against destroying in-progress work). If the component already exists, the user explicitly sets `--out` to a different path or removes the existing directory.
-- **Must not be a monorepo root** when `ADS_TARGET_REPO` points to the root. If the repo is a monorepo, `ADS_TARGET_REPO` should point to the specific workspace where the component should land.
+- **Must not be a monorepo root** when `RELAY_DS_TARGET_REPO` points to the root. If the repo is a monorepo, `RELAY_DS_TARGET_REPO` should point to the specific workspace where the component should land.
 - **Must not lack a Storybook setup** if Phase 3 agents (Visual Reviewer, Story Author interaction tests) will run. Phase 1/2 can operate without Storybook running (Quality Gate just runs tsc + lint + prettier), but the full pipeline needs it.

@@ -60,9 +60,9 @@ Environment variables (read by the orchestrator at run-init time):
 
 | Variable | Default | Effect |
 |---|---|---|
-| `ADS_KEEP_RUNS` | `20` | Number of runs to retain per component. Set to `0` to disable retention (keep everything) |
-| `ADS_ARCHIVE_DIR` | *unset* | If set, pruned runs are moved to `<ADS_ARCHIVE_DIR>/<YYYY>/<MM>/<run_id>/` instead of deleted |
-| `ADS_PRUNE_ON_BUILD` | `1` | Set to `0` to skip pruning on build. Useful when debugging; not recommended for normal use |
+| `RELAY_DS_KEEP_RUNS` | `20` | Number of runs to retain per component. Set to `0` to disable retention (keep everything) |
+| `RELAY_DS_ARCHIVE_DIR` | *unset* | If set, pruned runs are moved to `<RELAY_DS_ARCHIVE_DIR>/<YYYY>/<MM>/<run_id>/` instead of deleted |
+| `RELAY_DS_PRUNE_ON_BUILD` | `1` | Set to `0` to skip pruning on build. Useful when debugging; not recommended for normal use |
 
 No config file yet — env vars keep v0.1.0 simple. A `pipeline-config.yaml` file is reasonable for a future release.
 

@@ -6,7 +6,7 @@ To modify: Edit directly.
 
 # Mission
 
-**Automated Design System (ADS)** is an agent-team pipeline, delivered as a Claude Code plugin, that turns a Figma component file into a production-quality React component — source code, Storybook stories with interaction tests, accessibility report, visual comparison, and quality gate report — with structured human gates at the places where human judgment matters most.
+**Relay DS** is an agent-team pipeline, delivered as a Claude Code plugin, that turns a Figma component file into a production-quality React component — source code, Storybook stories with interaction tests, accessibility report, visual comparison, and quality gate report — with structured human gates at the places where human judgment matters most.
 
 ## What it is
 

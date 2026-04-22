@@ -1,5 +1,5 @@
 ---
-description: Build a production React component from a Figma node. Runs the full ADS pipeline (Understand → Build → Verify) with the active DS adapter.
+description: Build a production React component from a Figma node. Runs the full Relay DS pipeline (Understand → Build → Verify) with the active DS adapter.
 argument-hint: <figma-url-or-node-id> [--adapter <name>] [--out <path>]
 ---
 
@@ -15,7 +15,7 @@ Build one component end-to-end. The pipeline runs agents sequentially, pauses at
 
 - `<figma-url-or-node-id>` — required. The Figma component to build.
 - `--adapter <name>` — DS adapter directory under `adapters/`. Defaults to `template` (which will fail — fork it first via `/relay-ds:onboard-adapter`).
-- `--out <path>` — target output directory. Resolution order: `--out` flag → `$ADS_TARGET_REPO/src/components/<ComponentName>/` → `./out/<component-name>/` (not useful for real builds). See `standards/test-target-repo.md`.
+- `--out <path>` — target output directory. Resolution order: `--out` flag → `$RELAY_DS_TARGET_REPO/src/components/<ComponentName>/` → `./out/<component-name>/` (not useful for real builds). See `standards/test-target-repo.md`.
 
 ## Orchestrator flow
 
@@ -28,7 +28,7 @@ Per `standards/run-retention.md`:
 1. List every `runs/*/pipeline-state.yaml` with a terminal `phase` value (`complete` or `halted-at-*`)
 2. Filter to runs matching the current `component` name
 3. Sort by `run_started_at` descending
-4. If the count exceeds `$ADS_KEEP_RUNS` (default 20), delete (or archive, if `$ADS_ARCHIVE_DIR` is set) the oldest excess runs
+4. If the count exceeds `$RELAY_DS_KEEP_RUNS` (default 20), delete (or archive, if `$RELAY_DS_ARCHIVE_DIR` is set) the oldest excess runs
 5. Rewrite `runs/index.yaml`
 
 ### 1. Initialize the run
@@ -36,7 +36,7 @@ Per `standards/run-retention.md`:
 - Generate a `run_id` (UUID v4)
 - Create `runs/<run_id>/` and `runs/<run_id>/reports/`
 - Capture the current timestamp as `run_started_at`
-- Set `ADS_RUN_DIR=runs/<run_id>` in the environment so hooks can find artifacts
+- Set `RELAY_DS_RUN_DIR=runs/<run_id>` in the environment so hooks can find artifacts
 - Write the initial `runs/<run_id>/pipeline-state.yaml`:
 
 ```yaml
@@ -87,7 +87,7 @@ Update `pipeline-state.yaml`: `phase: build`.
 
 1. **`code-writer`** — produces the component source files in `<target>/src/components/<ComponentName>/`. Emits `reports/code-writer.yaml`.
 
-   **Pre-flight check (hook-enforced):** `brief.md`, `component-rules.md`, `architecture.md` must all be present in `$ADS_RUN_DIR`.
+   **Pre-flight check (hook-enforced):** `brief.md`, `component-rules.md`, `architecture.md` must all be present in `$RELAY_DS_RUN_DIR`.
 
    **Compliance-fix loop:**
    - Scan `reports/code-writer.yaml` for `[TOKEN_MISMATCH]` or `[ARCH_DEVIATION]` markers

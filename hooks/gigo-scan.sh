@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Post-write rule-violation scanner. Scans Write/Edit output for forbidden patterns
-# and appends findings to $ADS_RUN_DIR/reports/gigo-scan.log. Does not block.
+# and appends findings to $RELAY_DS_RUN_DIR/reports/gigo-scan.log. Does not block.
 #
 # Quality Gate consumes the log to decide whether to fail the run.
 
 set -euo pipefail
 
 input="$(cat)"
-run_dir="${ADS_RUN_DIR:-}"
+run_dir="${RELAY_DS_RUN_DIR:-}"
 
 # Outside a pipeline run — nothing to scan against.
 if [ -z "$run_dir" ]; then

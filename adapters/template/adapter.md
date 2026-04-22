@@ -33,7 +33,7 @@ After filling in the six files:
 
 ## Adapter version pin
 
-Declare the ADS pipeline version this adapter targets:
+Declare the Relay DS pipeline version this adapter targets:
 
 ```yaml
 # adapter-version.yaml

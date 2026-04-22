@@ -1,6 +1,6 @@
 # Design System Adapter Interface
 
-The ADS pipeline is generic. Everything design-system-specific lives in a pluggable adapter at `adapters/<name>/`. A generic template ships at `adapters/template/` for teams to copy.
+The Relay DS pipeline is generic. Everything design-system-specific lives in a pluggable adapter at `adapters/<name>/`. A generic template ships at `adapters/template/` for teams to copy.
 
 ## Why adapters exist
 
@@ -61,7 +61,7 @@ Items to include in the output's manual-test checklist that are specific to this
 
 ## Adapter versioning
 
-Each adapter declares the ADS pipeline version it was written against. Breaking pipeline changes bump a major version; adapters are expected to pin to a range.
+Each adapter declares the Relay DS pipeline version it was written against. Breaking pipeline changes bump a major version; adapters are expected to pin to a range.
 
 ## Building a new adapter
 
