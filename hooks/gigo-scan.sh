@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 # Post-write rule-violation scanner. Scans Write/Edit output for forbidden patterns
-# and appends findings to $RELAY_DS_RUN_DIR/reports/gigo-scan.log. Does not block.
+# and appends findings to the current run's reports/gigo-scan.log. Does not block.
+#
+# Discovers the run directory by walking up from the written file path, looking for a
+# runs/<uuid>/ ancestor. If none is found, the write isn't pipeline output — skip.
 #
 # Quality Gate consumes the log to decide whether to fail the run.
 
 set -euo pipefail
 
 input="$(cat)"
-run_dir="${RELAY_DS_RUN_DIR:-}"
-
-# Outside a pipeline run — nothing to scan against.
-if [ -z "$run_dir" ]; then
-  exit 0
-fi
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "gigo-scan: jq not installed; skipping (install jq to enable GIGO scans)" >&2
@@ -28,6 +25,25 @@ case "$path" in
 esac
 
 if [ ! -f "$path" ]; then
+  exit 0
+fi
+
+# Walk up from $path looking for a runs/<uuid>/ ancestor to locate the run directory.
+run_dir=""
+dir="$(dirname "$path")"
+while [ "$dir" != "/" ] && [ "$dir" != "." ]; do
+  parent="$(dirname "$dir")"
+  base="$(basename "$dir")"
+  parent_base="$(basename "$parent")"
+  if [ "$parent_base" = "runs" ] && [[ "$base" =~ ^[a-f0-9-]+$ ]]; then
+    run_dir="$dir"
+    break
+  fi
+  dir="$parent"
+done
+
+# If we couldn't find a run dir, this isn't pipeline output — skip.
+if [ -z "$run_dir" ]; then
   exit 0
 fi
 

@@ -2,7 +2,7 @@
 
 The pipeline does not build into itself. Generated components land in a **separate target repo** — a React + TypeScript + Storybook project where the output can actually compile, run, and be screenshot-tested.
 
-This doc defines what a valid target repo looks like and how the pipeline connects to it.
+This doc defines what a valid target repo looks like and how the orchestrator discovers it.
 
 ---
 
@@ -28,7 +28,7 @@ A target repo must have:
 │   ├── main.ts
 │   └── preview.ts
 ├── src/
-│   └── components/               # where generated components land (default output path)
+│   └── components/               # where generated components land
 └── <DS adapter's token CSS/JS>   # tokens must be importable/applied at runtime
 ```
 
@@ -58,29 +58,34 @@ The exact versions are flexible; the *shape* is not.
 
 ---
 
-## How the pipeline connects to the target
+## How the orchestrator discovers the target repo
 
-Via `RELAY_DS_TARGET_REPO` env var, or the `--out` flag to `/relay-ds:build-component`.
+The target repo is a path. The orchestrator obtains it one of three ways, in order:
 
-Resolution order:
+1. **Explicit in the invocation.** If the user's `/relay-ds:build-component` message includes a path (e.g., *"build the Button from … into ~/sds-target"*), parse that.
+2. **Session memory.** If a previous command in the current conversation established a target and the user hasn't said otherwise, reuse it.
+3. **Ask.** If neither of the above applies, the orchestrator asks: *"Which repo should the generated component land in? (absolute path)"*
 
-1. Explicit `--out <path>` flag on the command
-2. `RELAY_DS_TARGET_REPO` env var — path to the target repo; components land at `<RELAY_DS_TARGET_REPO>/src/components/<ComponentName>/`
-3. Fallback: `./out/<ComponentName>/` inside the current working directory. Not useful for real builds — the Visual Reviewer will fail to screenshot because nothing is installed.
+There is no environment variable to set. There is no "current working directory" to inherit from. Slash commands run inside Claude Code, not a shell.
 
-The orchestrator validates target presence before dispatching Code Writer:
+---
 
-- `<target>/package.json` exists and contains `react` as a dependency
+## Target validation (before anything else runs)
+
+Once a candidate path is resolved, the orchestrator validates it before dispatching any agent:
+
+- `<target>/package.json` exists and declares `react` as a dependency
 - `<target>/.storybook/` exists
-- `<target>/src/components/` exists (or is creatable)
+- `<target>/src/components/` exists (or can be created)
+- No existing `<target>/src/components/<ComponentName>/` directory for the component being built (refuse to overwrite)
 
-If any check fails: halt with a specific error and the fix step ("add a `.storybook/` directory per the template at …", etc.).
+If any check fails: halt with a specific error and a suggested fix. Do NOT silently fall back to writing somewhere else — the cost of accidentally writing components into the wrong place is higher than the cost of asking the user to confirm.
 
 ---
 
 ## Starter target for teams without one
 
-If a team doesn't have a target repo yet, the simplest starter:
+If a team doesn't have a target repo yet, a minimal starter:
 
 ```
 npx create-vite@latest my-ds-target --template react-ts
@@ -90,14 +95,14 @@ npm install @floating-ui/react axe-core
 npm install -D eslint-plugin-jsx-a11y prettier
 ```
 
-Then install the DS's token package / paste the token CSS into `src/index.css`, and set `RELAY_DS_TARGET_REPO=$(pwd)` before running `/relay-ds:build-component`.
+Then install the DS's token package or paste the token CSS into `src/index.css`. When running `/relay-ds:build-component`, provide `my-ds-target`'s absolute path when asked (or include it in the command message).
 
-This starter isn't maintained as part of the plugin — it's just a known-good starting point. A future iteration of the plugin could add a `/relay-ds:init-target` command to automate it; not in v0.1.0 scope.
+A future `/relay-ds:init-target` command could automate this scaffold; not in v0.1.0 scope.
 
 ---
 
 ## What the target repo must NOT do
 
-- **Must not have an existing `src/components/<ComponentName>/` directory** for the component being built. The pipeline refuses to overwrite existing components (safety against destroying in-progress work). If the component already exists, the user explicitly sets `--out` to a different path or removes the existing directory.
-- **Must not be a monorepo root** when `RELAY_DS_TARGET_REPO` points to the root. If the repo is a monorepo, `RELAY_DS_TARGET_REPO` should point to the specific workspace where the component should land.
+- **Must not have an existing `src/components/<ComponentName>/` directory** for the component being built. The orchestrator refuses to overwrite existing components (safety against destroying in-progress work). If the component already exists, the user picks a different output subpath in conversation or removes the existing directory.
+- **Must not be a monorepo root** when pointed at the root. For monorepos, point at the specific workspace where the component should land.
 - **Must not lack a Storybook setup** if Phase 3 agents (Visual Reviewer, Story Author interaction tests) will run. Phase 1/2 can operate without Storybook running (Quality Gate just runs tsc + lint + prettier), but the full pipeline needs it.

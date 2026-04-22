@@ -1,6 +1,6 @@
 # Run Retention Policy
 
-Every `/relay-ds:build-component` invocation creates `runs/<run_id>/` with brief, architecture, reports, component source, and artifacts. Without a policy, this directory grows unbounded.
+Every `/relay-ds:build-component` invocation creates a per-run directory with brief, architecture, reports, component source, and artifacts. Without a policy, this grows unbounded.
 
 This doc defines retention, pruning, and archival for the v0.1.0 release.
 
@@ -8,28 +8,36 @@ This doc defines retention, pruning, and archival for the v0.1.0 release.
 
 ## Defaults
 
-- **Retention window:** the **20 most recent runs per component** are kept on disk, indexed by `run_started_at` timestamp
+- **Retention window:** the **20 most recent runs per component** are kept on disk, ordered by `run_started_at`
 - **Pruning trigger:** the orchestrator runs a prune pass at the start of every `/relay-ds:build-component` invocation, before creating the new run directory
-- **Archival:** none by default. Old runs are deleted. Teams that want to keep history should configure archival explicitly (see below).
+- **Archival:** none by default. Old runs are deleted. Teams that want to keep history tell the orchestrator to archive (see below).
+
+---
+
+## Where runs live
+
+Runs live inside the target repo, at `<target>/runs/<run_id>/`. This keeps per-run artifacts next to the code they relate to, and ensures nothing leaks into the plugin install directory.
+
+The target repo's `.gitignore` should include `runs/` — a future `/relay-ds:init-target` command will add this automatically. For manual target-repo setup, add it by hand.
 
 ---
 
 ## Prune mechanics
 
-At the start of every build:
+At the start of every build, the orchestrator:
 
-1. List all `runs/*/pipeline-state.yaml` where `component == <current-component-name>`
-2. Sort by `run_started_at` descending
-3. Keep the 20 most recent
-4. Delete the rest, recursively
+1. Lists all `<target>/runs/*/pipeline-state.yaml` where `component == <current-component-name>`
+2. Sorts by `run_started_at` descending
+3. Keeps the 20 most recent
+4. Deletes (or archives, if the user specified archival) the rest, recursively
 
-Runs in progress (no terminal phase marker) are NEVER pruned — only runs with `phase: complete` or `phase: halted-at-<gate>`.
+Runs in progress (no terminal `phase` marker) are NEVER pruned — only runs with `phase: complete` or `phase: halted-at-<gate>`.
 
 ---
 
 ## Index file
 
-`runs/index.yaml` — maintained by the orchestrator. Lists every retained run with enough metadata to navigate without opening each directory.
+`<target>/runs/index.yaml` — maintained by the orchestrator. Lists every retained run with enough metadata to navigate without opening each directory.
 
 ```yaml
 runs:
@@ -54,17 +62,15 @@ The index is rewritten after every prune. Human-readable; also consumable by `/r
 
 ---
 
-## Configuring retention
+## User overrides
 
-Environment variables (read by the orchestrator at run-init time):
+The user changes retention behavior by saying so in the slash-command invocation or a follow-up message:
 
-| Variable | Default | Effect |
-|---|---|---|
-| `RELAY_DS_KEEP_RUNS` | `20` | Number of runs to retain per component. Set to `0` to disable retention (keep everything) |
-| `RELAY_DS_ARCHIVE_DIR` | *unset* | If set, pruned runs are moved to `<RELAY_DS_ARCHIVE_DIR>/<YYYY>/<MM>/<run_id>/` instead of deleted |
-| `RELAY_DS_PRUNE_ON_BUILD` | `1` | Set to `0` to skip pruning on build. Useful when debugging; not recommended for normal use |
+- *"keep the last 50 runs"* → orchestrator uses 50 instead of the 20 default for this build
+- *"archive old runs to ~/relay-ds-archive instead of deleting"* → orchestrator moves pruned runs to `~/relay-ds-archive/<YYYY>/<MM>/<run_id>/`
+- *"don't prune anything this time"* → skip the prune pass for this run
 
-No config file yet — env vars keep v0.1.0 simple. A `pipeline-config.yaml` file is reasonable for a future release.
+There are no environment variables. Defaults live in the command prompt; overrides come from conversation.
 
 ---
 
@@ -72,14 +78,14 @@ No config file yet — env vars keep v0.1.0 simple. A `pipeline-config.yaml` fil
 
 `/relay-ds:prune-runs [--component <name>] [--keep <n>] [--archive <dir>]` is a proposed command for v0.2+. Not in v0.1.0 scope.
 
-For v0.1.0, manual pruning is a `rm -rf` against specific `runs/<run_id>/` directories. Combined with the `.gitignore` on `runs/`, this keeps repos clean without automated tooling.
+For v0.1.0, manual pruning is a plain `rm -rf <target>/runs/<run_id>/` in a shell when the user wants to clean up outside the automatic pass. The orchestrator doesn't manage this.
 
 ---
 
 ## What never gets pruned
 
-- `workarounds.md` at the project root — this is durable project knowledge, not per-run state
-- The orchestrator's own memory / skill-file updates — promoted rules persist regardless of which run surfaced them
-- `runs/index.yaml` — rewritten, never deleted
+- `workarounds.md` at the plugin root — this is durable project knowledge, not per-run state
+- Promoted memory / skill-file updates — rules persist regardless of which run surfaced them
+- `<target>/runs/index.yaml` — rewritten, never deleted
 
-The prune policy affects only per-run artifact directories.
+The prune policy affects only per-run artifact directories inside the target repo's `runs/`.

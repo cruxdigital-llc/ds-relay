@@ -2,28 +2,36 @@
 # Pre-flight artifact check. Blocks agent dispatch when required inputs are missing.
 #
 # Hook contract: reads JSON tool input from stdin; exits 0 to allow, exits 1 to block.
-# Only operates when $RELAY_DS_RUN_DIR is set (i.e., inside a pipeline run). Otherwise passes through.
+# Discovers the run directory by scanning the subagent's prompt for a runs/<uuid>/ path.
+# If no run dir is detected, the dispatch is not a pipeline agent invocation — pass through.
 
 set -euo pipefail
 
 input="$(cat)"
-run_dir="${RELAY_DS_RUN_DIR:-}"
 
-# Outside a pipeline run — nothing to enforce.
-if [ -z "$run_dir" ]; then
-  exit 0
-fi
-
-# Extract the subagent being dispatched.
 if ! command -v jq >/dev/null 2>&1; then
   echo "enforce-preflight: jq not installed; skipping (install jq to enable pre-flight checks)" >&2
   exit 0
 fi
 
+# Extract the subagent being dispatched.
 agent="$(printf '%s' "$input" | jq -r '.tool_input.subagent_type // .tool_input.agent // empty')"
 
 if [ -z "$agent" ]; then
   # Not an agent dispatch — probably a non-Task tool call.
+  exit 0
+fi
+
+# Extract the full prompt text passed to the subagent.
+prompt="$(printf '%s' "$input" | jq -r '.tool_input.prompt // .tool_input.description // empty')"
+
+# Discover the run directory from the prompt text.
+# The orchestrator references artifact paths like /path/to/target/runs/<uuid>/brief.md
+# in the subagent prompt. Extract the runs/<uuid>/ prefix.
+run_dir="$(printf '%s' "$prompt" | grep -oE '(^|[^a-zA-Z0-9_/])[^[:space:]]*/runs/[a-f0-9-]+' | head -1 | sed 's/^[^a-zA-Z0-9_/]//')"
+
+if [ -z "$run_dir" ]; then
+  # No pipeline run directory detected — not a pipeline dispatch.
   exit 0
 fi
 

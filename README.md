@@ -17,19 +17,12 @@ Design-system-agnostic core. Pluggable adapters per target DS.
 
 - **Claude Code** — the plugin targets current Claude Code plugin conventions (subagents, slash commands, hooks, MCP config)
 - **Figma desktop app** with the **Figma Console MCP plugin** installed — the Design Analyst's primary Figma path. Without it, the pipeline falls back to Figma REST and applies a `-0.30` GIGO penalty
-- **A target repo** where generated components will land — React 18+, TypeScript, Storybook, CSS Modules. Convention: `standards/test-target-repo.md`
-- **A filled-in DS adapter** — run `/relay-ds:onboard-adapter <your-ds-name>` once per design system (see step 1 in *How to use* below)
+- **A target repo** where generated components will land — React 18+, TypeScript, Storybook, CSS Modules. Convention: `standards/test-target-repo.md`. You'll give the orchestrator the absolute path when running a build
+- **A filled-in DS adapter** — run `/relay-ds:onboard-adapter` once per design system (see step 1 in *How to use* below)
 
 ### Verifying the install
 
-After installing, confirm the commands are registered:
-
-```
-/relay-ds:onboard-adapter --help
-/relay-ds:build-component --help
-```
-
-Both should print the argument hint from the command's frontmatter.
+After installing, run `/relay-ds:onboard-adapter` — it should start by asking you the first onboarding question. If the command isn't found, Claude Code didn't discover the plugin (try `/plugin marketplace update crux-marketplace`).
 
 ---
 
@@ -76,7 +69,7 @@ standards/                     # the contracts
   artifact-contracts.md            # every doc, every required section
   tech-stack.md                    # output-code conventions
   ds-adapter.md                    # adapter interface
-  test-target-repo.md              # target-repo shape + RELAY_DS_TARGET_REPO resolution
+  test-target-repo.md              # target-repo shape + how the orchestrator discovers it
   push-back-protocol.md            # [BLOCKING]/[CONCERN]/[SUGGESTION]
   gigo-score.md                    # deterministic quality score
   figma-canary.md                  # MCP liveness check protocol

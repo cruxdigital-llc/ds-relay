@@ -1,49 +1,46 @@
 ---
 description: Build a production React component from a Figma node. Runs the full Relay DS pipeline (Understand → Build → Verify) with the active DS adapter.
-argument-hint: <figma-url-or-node-id> [--adapter <name>] [--out <path>]
+argument-hint: <figma-url-or-node-id> into <target-repo-path> using <adapter-name>
 ---
 
 # /relay-ds:build-component
 
 Build one component end-to-end. The pipeline runs agents sequentially, pauses at documented human gates, and halts on degraded input.
 
-## Usage
+## What the user provides
 
-```
-/relay-ds:build-component <figma-url-or-node-id> [--adapter <name>] [--out <path>]
-```
+The orchestrator needs three things to start:
 
-- `<figma-url-or-node-id>` — required. The Figma component to build.
-- `--adapter <name>` — DS adapter directory under `adapters/`. Defaults to `template` (which will fail — fork it first via `/relay-ds:onboard-adapter`).
-- `--out <path>` — target output directory. Resolution order: `--out` flag → `$RELAY_DS_TARGET_REPO/src/components/<ComponentName>/` → `./out/<component-name>/` (not useful for real builds). See `standards/test-target-repo.md`.
+1. **Figma node URL or ID** — the component to build
+2. **Target repo absolute path** — where generated files land; validated per `standards/test-target-repo.md`
+3. **DS adapter name** — directory under `adapters/`
+
+The user can supply all three in the invocation (*"build the Button from figma.com/file/… into ~/sds-target using the sds adapter"*) or provide them incrementally as the orchestrator asks. The orchestrator always asks for anything missing; it never guesses.
+
+If only one adapter exists under `adapters/`, the orchestrator uses it without asking. If multiple exist, it asks.
 
 ## Orchestrator flow
 
-Follow this flow precisely. Each step is a Task dispatch to a specific subagent. Do not skip steps. Do not write `pipeline-state.yaml` from any subagent — only the orchestrator (you, in this command) writes it, by aggregating the per-agent reports.
+Follow this flow precisely. Each numbered step is a Task dispatch to a specific subagent or an in-conversation action. Do not skip steps. Do not write `pipeline-state.yaml` from any subagent — only the orchestrator writes it, by aggregating the per-agent reports.
 
-### 0. Prune old runs
+### 0. Gather inputs + validate the target
 
-Per `standards/run-retention.md`:
-
-1. List every `runs/*/pipeline-state.yaml` with a terminal `phase` value (`complete` or `halted-at-*`)
-2. Filter to runs matching the current `component` name
-3. Sort by `run_started_at` descending
-4. If the count exceeds `$RELAY_DS_KEEP_RUNS` (default 20), delete (or archive, if `$RELAY_DS_ARCHIVE_DIR` is set) the oldest excess runs
-5. Rewrite `runs/index.yaml`
+- Collect figma node, target path, adapter name (from invocation text, session state, or by asking)
+- Validate the target repo per `standards/test-target-repo.md`. If validation fails: halt, report the specific check that failed, suggest the fix.
+- Prune old runs under `<target>/runs/` per `standards/run-retention.md` (keep 20 most recent per component, unless the user said otherwise in this session)
 
 ### 1. Initialize the run
 
 - Generate a `run_id` (UUID v4)
-- Create `runs/<run_id>/` and `runs/<run_id>/reports/`
+- Create `<target>/runs/<run_id>/` and `<target>/runs/<run_id>/reports/`
 - Capture the current timestamp as `run_started_at`
-- Set `RELAY_DS_RUN_DIR=runs/<run_id>` in the environment so hooks can find artifacts
-- Write the initial `runs/<run_id>/pipeline-state.yaml`:
+- Write the initial `<target>/runs/<run_id>/pipeline-state.yaml`:
 
 ```yaml
 run_id: <uuid>
 component: <to-be-filled-after-brief>
 ds_adapter: <adapter>
-target_repo: <resolved-out-path>
+target_repo: <target-path>
 run_started_at: <timestamp>
 phase: understand
 gigo:
@@ -58,6 +55,8 @@ gates:
   # more gates added as they surface
 push_back: []
 ```
+
+The orchestrator remembers `<target>/runs/<run_id>/` as the run directory for the remainder of this invocation. Subagents are dispatched with this absolute path in their Task prompt so they know where to read/write artifacts. Hooks infer the run directory from the artifact paths they see in tool input.
 
 ### 2. Understand phase
 
@@ -85,9 +84,9 @@ Dispatch agents **sequentially** (each reads the prior's output):
 
 Update `pipeline-state.yaml`: `phase: build`.
 
-1. **`code-writer`** — produces the component source files in `<target>/src/components/<ComponentName>/`. Emits `reports/code-writer.yaml`.
+1. **`code-writer`** — produces the component source files at `<target>/src/components/<ComponentName>/`. Emits `reports/code-writer.yaml`.
 
-   **Pre-flight check (hook-enforced):** `brief.md`, `component-rules.md`, `architecture.md` must all be present in `$RELAY_DS_RUN_DIR`.
+   **Pre-flight check (hook-enforced):** `brief.md`, `component-rules.md`, `architecture.md` must all be present in the run directory. The hook infers the run directory from the paths in the subagent's prompt.
 
    **Compliance-fix loop:**
    - Scan `reports/code-writer.yaml` for `[TOKEN_MISMATCH]` or `[ARCH_DEVIATION]` markers
@@ -120,9 +119,9 @@ Update `pipeline-state.yaml`: `phase: verify`.
 ### 5. Finalize
 
 - Write final `pipeline-state.yaml` with `phase: complete`, `run_ended_at: <timestamp>`
-- Dispatch the PR-description populator (inline — not a subagent; just template substitution per `standards/pr-description-template.md`). Output: `runs/<run_id>/PR_DESCRIPTION.md`.
-- Update `runs/index.yaml` with the new run's summary line
-- Write `runs/<run_id>/SUMMARY.md` as a shorter human-facing digest (one screen of text; the PR description is the long form)
+- Populate `<target>/runs/<run_id>/PR_DESCRIPTION.md` via template substitution per `standards/pr-description-template.md`
+- Update `<target>/runs/index.yaml` with the new run's summary line
+- Write `<target>/runs/<run_id>/SUMMARY.md` as a shorter human-facing digest (one screen of text; the PR description is the long form)
 - Copy manual-check items from the adapter into `SUMMARY.md` and `PR_DESCRIPTION.md`
 
 ---
@@ -188,15 +187,15 @@ When `architecture.md` has `[BLOCKING]` markers or `LOW`-confidence sections:
 
 ## Failure modes (decision matrix)
 
-| Situation | Action | Pipeline-state `phase` |
+| Situation | Action | `pipeline-state.phase` |
 |---|---|---|
+| Target repo validation fails | Halt before run directory is created | N/A (no run created) |
 | GIGO < 0.80 at any point | Halt with GIGO UI | `halted-gigo` |
 | `[BLOCKING]` issue at architecture gate | Pause for conversational gate | `halted-architecture` (until resolved) |
 | Code Writer compliance fails twice | Halt, surface error signature | `halted-code-writer` |
 | Same a11y error after 3 rounds | Halt, mark `[UNRESOLVED_A11Y]`, apply penalty | `halted-a11y` |
 | Visual Reviewer hits max 5 iterations | Exit with `[VISUAL_CRITICAL]` deviations surfaced | `complete` (with caveats) or `halted-visual` if critical |
 | Quality Gate same error twice | Halt | `halted-quality-gate` |
-| Target repo validation fails | Halt before dispatching anything | `halted-target-repo` |
 
 All halt paths write a clear reason to `pipeline-state.yaml` under `halt_reason`.
 
@@ -207,9 +206,9 @@ All halt paths write a clear reason to `pipeline-state.yaml` under `halt_reason`
 A short message — two to three sentences, not a wall of text:
 
 ```
-Built <Component Name> at <target-path>.
+Built <Component Name> at <target-path>/src/components/<ComponentName>/.
 GIGO final: <score>. Gates resolved: <n>. Visual review: <grade summary>.
-See runs/<run_id>/PR_DESCRIPTION.md for the manual-check checklist to ship with the PR.
+See <target-path>/runs/<run_id>/PR_DESCRIPTION.md for the manual-check checklist to ship with the PR.
 ```
 
 Nothing more. The artifacts are self-contained; the user reads them when ready.
