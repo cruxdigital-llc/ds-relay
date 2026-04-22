@@ -1,6 +1,6 @@
 {
   "name": "relay-ds",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Relay DS. Agent-team pipeline that turns a Figma component into a production React component via 8 specialized agents across Understand → Build → Verify phases. Generic core, pluggable design-system adapter.",
   "author": {
     "name": "Crux Digital",
