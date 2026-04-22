@@ -1,4 +1,4 @@
-# Automated Design System (ADS)
+# Relay DS
 
 A Claude Code plugin that turns a Figma component into a production-quality React component — source code, Storybook stories with interaction tests, accessibility report, visual comparison, and quality gate report — via an 8-agent pipeline with structured human gates.
 
